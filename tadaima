@@ -30,11 +30,11 @@
     <div id="msg"></div>
 
     <script>
-      const obniz = new Obniz("4412-4978"); 
+      const obniz = new Obniz("4412-4978"); //⭐ここに個人のオブナイズ番号を入力してください。
       const LED_length = 15; 
       let leds;
       
-      // ★ここがあなたの個人用GASのURLになっているか最後に確認してください！
+      // ここがあなたの個人用GASのURLになっているか最後に確認してください！
       const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbzzMCSVhD_BAmUv4Qhh4Iz9qwF8DkBqNFMDPg6rovgvklFMi7N6PNyky-fzYmG7HG7S/exec";
 
       let isSending = false;
