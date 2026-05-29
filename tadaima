@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://obniz.com/js/jquery-3.2.1.min.js"></script>
+    <script src="https://unpkg.com/obniz@3.x/obniz.js" crossorigin="anonymous"></script>
+    <title>おかえり通知システム 🏠</title>
+    <style>
+      body { text-align: center; font-family: sans-serif; background-color: #f0f8ff; color: #333; }
+      h1 { margin-top: 50px; font-size: 28px; }
+      .btn {
+        margin-top: 30px; width: 250px; height: 250px; font-size: 32px; font-weight: bold;
+        border-radius: 50%; cursor: pointer; border: none; background-color: #ff9800; color: white;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2); transition: all 0.2s;
+      }
+      .btn:active { transform: scale(0.95); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+      #msg { margin-top: 30px; font-size: 20px; font-weight: bold; color: #4CAF50; }
+      #debugPin { margin-top: 20px; font-size: 22px; color: #d32f2f; font-weight: bold; background: #fff; padding: 10px; border-radius: 10px; display: inline-block;}
+    </style>
+  </head>
+  <body>
+    <div id="obniz-debug"></div>
+    <h1 id="status">🏠 おかえりボタンシステム</h1>
+    
+    <div id="debugPin">🔎 ボタンの状態：確認中...</div>
+    
+    <p>家に帰ってきたら、下の大きなボタンか、M5 Atomの本体ボタンを押してね！</p>
+    <button id="homeBtn" class="btn">ただいま！<br>🎒</button>
+    <div id="msg"></div>
+
+    <script>
+      const obniz = new Obniz("4412-4978"); 
+      const LED_length = 15; 
+      let leds;
+      
+      // ★ここがあなたの個人用GASのURLになっているか最後に確認してください！
+      const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbzzMCSVhD_BAmUv4Qhh4Iz9qwF8DkBqNFMDPg6rovgvklFMi7N6PNyky-fzYmG7HG7S/exec";
+
+      let isSending = false;
+
+      obniz.onconnect = async function () {
+        leds = obniz.wired("WS2812", { din: 26 }); 
+        let rdyList = [...Array(LED_length)].map(() => [120, 1.0, 0.1]); 
+        leds.hsvs(rdyList);
+
+        async function sendNotification() {
+          isSending = true;
+          document.getElementById("msg").innerText = "LINEを送っているよ... ✉️";
+          
+          for(let i=0; i<10; i++) {
+            let flashList = [...Array(LED_length)].map(() => [Math.random()*360, 1.0, 0.3]);
+            leds.hsvs(flashList);
+            await obniz.wait(100);
+          }
+
+          try {
+            const response = await fetch(GOOGLE_URL);
+            if (response.ok) {
+              document.getElementById("msg").innerText = "保護者にLINEを送りました！ ✅";
+            } else {
+              document.getElementById("msg").innerText = "通信エラーが発生しました ❌";
+            }
+          } catch (error) {
+            document.getElementById("msg").innerText = "エラー：正しく送信できませんでした ❌";
+          }
+          
+          leds.hsvs(rdyList);
+          await obniz.wait(3000); // 連打防止のために3秒休む
+          isSending = false;
+        }
+
+        // 1. パソコン画面のボタン
+        document.getElementById("homeBtn").onclick = async function () {
+          if (!isSending) await sendNotification();
+        };
+
+        // 2. 0.1秒ごとに直接ピンの電気を測る（絶対にサボらせない作戦）
+        async function watchButton() {
+          while (true) {
+            try {
+              let pinValue = await obniz.io39.getWait();
+              
+              if (pinValue === true) {
+                // 押していない時
+                document.getElementById("debugPin").innerText = "🔎 ボタンの状態：離されている 🟢";
+              } else if (pinValue === false) {
+                // 押された時
+                document.getElementById("debugPin").innerText = "🔎 ボタンの状態：👇 押された！！ 🔴";
+                
+                if (!isSending) {
+                  await sendNotification();
+                }
+              }
+            } catch (e) {}
+            
+            await obniz.wait(100); // 0.1秒待ってから再チェック
+          }
+        }
+        
+        watchButton(); // 監視スタート！
+      };
+    </script>
+  </body>
+</html>
