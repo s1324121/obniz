@@ -1,6 +1,6 @@
 <img width="368" height="190" alt="Screenshot 2026-05-29 101541" src="https://github.com/user-attachments/assets/415b99b1-16f4-4020-a93b-61d334de8db2" />
 <br>🏠 おかえり通知システム (obniz × LINE)
-<br>M5 Atom（obniz）とLINEを連携させた、子供の帰宅通知システムです。ブラウザ上のボタンを押すだけで、保護者のLINEに「ただいま」のメッセージが届きます。
+<br>ボタン一つで家族のLINEへ帰宅を伝え、送るときにはLEDが明るく光って知らせてくれます。本当は本体のボタンを押すと通知が送られるようにしたかったのですが、今回は難しかったので画面のボタンを使用しました。
 
 
 
